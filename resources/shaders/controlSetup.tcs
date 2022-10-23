@@ -1,0 +1,41 @@
+// The tessellation control shader used in the tessellation levels evaluation.
+// Tessellates the mesh based on the input image tessLevels;
+
+#version 410 core
+// Specify number of control points per patch output.
+// This value controls the size of the input and output arrays.
+layout (vertices=4) out;
+
+// Input the minimum tessellation level for each patch.
+uniform sampler2D tessLevels;
+
+// Varying input from vertex shader.
+in vec2 TexCoord[];
+// Varying output to evaluation shader.
+out vec2 TextureCoord[];
+
+void main()
+{
+    // Pass attributes through to tessellation evaluation shader.
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    TextureCoord[gl_InvocationID] = TexCoord[gl_InvocationID];
+
+    // Invocation zero controls tessellation levels for the entire patch.
+    if(gl_InvocationID == 0)
+    {
+        // Get the center of the quad and use it to sample the tessellation level image.
+        vec2 avgTexCoord = (TexCoord[0] + TexCoord[1] + TexCoord[2] + TexCoord[3]) / 4;
+        // Scale the image from a float back to an int.
+        int TESS_LEVEL = int(texture(tessLevels, avgTexCoord).r*255.0);
+
+        // Set the outer edge tessellation levels.
+        gl_TessLevelOuter[0] = TESS_LEVEL;
+        gl_TessLevelOuter[1] = TESS_LEVEL;
+        gl_TessLevelOuter[2] = TESS_LEVEL;
+        gl_TessLevelOuter[3] = TESS_LEVEL;
+
+        // Set the inner tessellation levels.
+        gl_TessLevelInner[0] = TESS_LEVEL;
+        gl_TessLevelInner[1] = TESS_LEVEL;
+    }
+}

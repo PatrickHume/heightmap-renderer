@@ -1,0 +1,67 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+	 {
+	  "type": "cppbuild",
+	  "label": "C/C++: clang++ build active file",
+	  "command": "/usr/bin/clang++",
+	  "args": [
+	   "-std=c++17",
+	   "-fdiagnostics-color=always",
+	   "-Wall",
+	   "-O2",
+	   "-I${workspaceFolder}/dependencies/include",
+	   "-lfreetype",
+	   "-L${workspaceFolder}/dependencies/library",
+	   "${workspaceFolder}/dependencies/library/libglfw.3.3.dylib",
+	   "${workspaceFolder}/source/*.cpp",
+	   "${workspaceFolder}/source/glad.c",
+	   "-o",
+	   "${workspaceFolder}/app",
+	   "-framework",
+	   "OpenGL",
+	   "-Wno-deprecated"
+	  ],
+	  "options": {
+	   "cwd": "${fileDirname}"
+	  },
+	  "problemMatcher": ["$gcc"],
+	  "group": {
+	   "kind": "build",
+	   "isDefault": true
+	  },
+	  "detail": "compiler: /usr/bin/clang++"
+	},
+	 {
+	  "type": "cppbuild",
+	  "label": "C/C++: clang++ build debug profile",
+	  "command": "/usr/bin/clang++",
+	  "args": [
+	   "-std=c++17",
+	   "-DPROFILE",
+	   "-fdiagnostics-color=always",
+	   "-lprofiler",
+	   "-Wall",
+	   "-ggdb3",
+	   "-I${workspaceFolder}/dependencies/include",
+	   "-L${workspaceFolder}/dependencies/library",
+	   "${workspaceFolder}/dependencies/library/libglfw.3.3.dylib",
+	   "${workspaceFolder}/source/*.cpp",
+	   "${workspaceFolder}/source/glad.c",
+	   "-o",
+	   "${workspaceFolder}/test",
+	   "-framework",
+	   "OpenGL",
+	   "-Wno-deprecated"
+	  ],
+	  "options": {
+	   "cwd": "${fileDirname}"
+	  },
+	  "problemMatcher": ["$gcc"],
+	  "group": {
+	   "kind": "build",
+	   "isDefault": true
+	  },
+	  "detail": "compiler: /usr/bin/clang++"
+	 }]
+}

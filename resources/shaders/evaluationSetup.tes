@@ -1,0 +1,55 @@
+// The tessellation evaluation shader used in the tessellation levels evaluation.
+// Determines the height of each tessellated vertex and sends it to the final
+// fragment shader.
+
+#version 410 core
+layout (quads, fractional_odd_spacing, ccw) in;
+
+// Input the heightmap texture.
+uniform sampler2D heightMap;
+// Input the orthogonal projection matrix.
+uniform mat4 projection;
+
+// Received from Tessellation Control Shader - all texture coordinates for the patch vertices.
+in vec2 TextureCoord[];
+
+// Send to Fragment Shader for comparison with the real heightmap.
+out float height;
+
+// Send to Fragment Shader for colouring.
+out vec2 fragTexCoord;
+
+void main()
+{
+    // Get the patch coordinates.
+    float u = gl_TessCoord.x;
+    float v = gl_TessCoord.y;
+
+    // Get the control point texture coordinates.
+    vec2 t00 = TextureCoord[0];
+    vec2 t01 = TextureCoord[1];
+    vec2 t10 = TextureCoord[2];
+    vec2 t11 = TextureCoord[3];
+
+    // Bilinearly interpolate the texture coordinate across the patch.
+    vec2 t0 = (t01 - t00) * u + t00;
+    vec2 t1 = (t11 - t10) * u + t10;
+    fragTexCoord = (t1 - t0) * v + t0;
+
+    // Lookup the texel at patch coordinate for height and pass to fragment shader.
+    height = texture(heightMap, fragTexCoord).r;
+
+    // The shader seems to need gl_in to be read or else it fails...
+    // I am not sure as to why.
+    vec4 p00 = gl_in[0].gl_Position;
+    vec4 p01 = gl_in[1].gl_Position;
+    vec4 p10 = gl_in[2].gl_Position;
+    vec4 p11 = gl_in[3].gl_Position;
+
+    // Move the vertices so as to be in front of the camera.
+    // The perspective is of a height and width of 1.0, which matches the texture coordinates.
+    // The perspective is orthogonal and facing the mesh, so the entire mesh is captured
+    // as if it were a flat image.
+    gl_Position = projection * vec4(fragTexCoord[0], fragTexCoord[1], 1.0, 1.0);
+}
+	

@@ -1,0 +1,67 @@
+// The tessellation control shader used in heightmap rendering.
+// Tessellates the mesh based on the input image tessLevels;
+
+#version 410 core
+// Specify number of control points per patch output.
+// This value controls the size of the input and output arrays.
+layout (vertices=4) out;
+
+// Input the minimum tessellation level for each patch.
+uniform sampler2D tessLevels;
+
+// Varying input from vertex shader.
+in vec2 TexCoord[];
+// Varying output to evaluation shader.
+out vec2 TextureCoord[];
+
+// Pass in the model and view matrices.
+uniform mat4 model;
+uniform mat4 view;
+
+void main()
+{
+    // Pass attributes through to tessellation evaluation shader.
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+    TextureCoord[gl_InvocationID] = TexCoord[gl_InvocationID];
+
+    // Invocation zero controls tessellation levels for the entire patch.
+    if(gl_InvocationID == 0)
+    {
+        // Get the center of the quad and use it to sample the tessellation level image.
+        vec2 avgTexCoord = (TexCoord[0] + TexCoord[1] + TexCoord[2] + TexCoord[3]) / 4;
+
+        // Set the min and max tessellation levels.
+        // Scale the min tessellation levels value from a float back to an int.
+        int MIN_TESS_LEVEL = int(texture(tessLevels, avgTexCoord).r*255.0);
+        const int MAX_TESS_LEVEL = 32;
+
+        // Determine the size of the patch.
+        vec2 size = abs(avgTexCoord - TexCoord[0])*2.0;
+        // Determine the height and width of the patch.
+        float PATCH_WIDTH  = size.x;
+        float PATCH_HEIGHT = size.y;
+
+        // Get the minimum tess levels for the surrounding patches.
+        // This will allow us to join the patches together smoothly.
+        int EAST_MIN_TESS_LEVEL   = int(texture(tessLevels, avgTexCoord+vec2(-PATCH_HEIGHT, 0.0)).r*255.0);
+        int WEST_MIN_TESS_LEVEL   = int(texture(tessLevels, avgTexCoord+vec2( PATCH_HEIGHT, 0.0)).r*255.0);
+        int NORTH_MIN_TESS_LEVEL  = int(texture(tessLevels, avgTexCoord+vec2( 0.0, -PATCH_WIDTH)).r*255.0);
+        int SOUTH_MIN_TESS_LEVEL  = int(texture(tessLevels, avgTexCoord+vec2( 0.0,  PATCH_WIDTH)).r*255.0);
+
+        // Take the maximum tessellation value between the patch and the patches neighbour.
+        float south = max(MIN_TESS_LEVEL,NORTH_MIN_TESS_LEVEL);
+        float west  = max(MIN_TESS_LEVEL,EAST_MIN_TESS_LEVEL);
+        float north = max(MIN_TESS_LEVEL,SOUTH_MIN_TESS_LEVEL);
+        float east  = max(MIN_TESS_LEVEL,WEST_MIN_TESS_LEVEL);
+
+        // Set the outer edge tessellation levels.
+        gl_TessLevelOuter[0] = west;
+        gl_TessLevelOuter[1] = south;
+        gl_TessLevelOuter[2] = east;
+        gl_TessLevelOuter[3] = north;
+
+        // Set the inner tessellation levels.
+        gl_TessLevelInner[0] = MIN_TESS_LEVEL;
+        gl_TessLevelInner[1] = MIN_TESS_LEVEL;
+    }
+}
