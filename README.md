@@ -26,3 +26,4 @@ https://tangrams.github.io/heightmapper/
 * Use **shift** and **~** to move up and down.
 * Hold **shift** to move faster.
 * Press **P** to toggle wireframe view.
+* Press **0** to toggle fixed-tessellation view.
