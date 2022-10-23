@@ -205,13 +205,13 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
         // ---------------------------------- Reading Results ----------------------------------
         // Wait until drawing has finished before reading from the frame buffer.
         glFinish();
-        glReadPixels(0, 0, width, height, GL_RED, GL_FLOAT, &screenFloatBuffer[0]);
-
         // Set the read buffer in preparation for reading.
         glReadBuffer(GL_COLOR_ATTACHMENT0);
         // Set the read byte alignment to 1.
         // (We cannot rely on the data being aligned as 4 bytes or otherwise.)
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        // Read out the pixels.
+        glReadPixels(0, 0, width, height, GL_RED, GL_FLOAT, &screenFloatBuffer[0]);
         
         // ---------------------------------- Updating Buffers ----------------------------------
         // Clear the error buffer - this is where the error of all pixels in each patch is accumulated.
