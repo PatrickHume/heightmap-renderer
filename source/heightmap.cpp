@@ -80,9 +80,9 @@ Heightmap::Heightmap(const char *file)
 
     // ---------------------------------- Generating Buffers ----------------------------------
     // Create the buffers to draw the evaluated tessellation levels to.
-    glGenRenderbuffers( 1, &renderbufId );
-    glGenRenderbuffers( 1, &depthbufId );
-    glGenFramebuffers ( 1, &framebufId   );
+    glGenRenderbuffers(1, &renderbufId);
+    glGenRenderbuffers(1, &depthbufId);
+    glGenFramebuffers (1, &framebufId);
     // Bind the render buffer.
     glBindRenderbuffer(GL_RENDERBUFFER, renderbufId);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_R32F, width, height);
@@ -94,7 +94,7 @@ Heightmap::Heightmap(const char *file)
     // Set up the framebuffer to hold the renderbuffers.
     glBindFramebuffer(GL_FRAMEBUFFER, framebufId);  
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbufId);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_RENDERBUFFER, depthbufId  );
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,  GL_RENDERBUFFER, depthbufId);
 
     // Check frame buffer for errors.
     GLenum stat = glCheckFramebufferStatus(GL_FRAMEBUFFER);  
