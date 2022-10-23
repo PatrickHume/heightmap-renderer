@@ -33,7 +33,6 @@ void main()
         // Set the min and max tessellation levels.
         // Scale the min tessellation levels value from a float back to an int.
         int MIN_TESS_LEVEL = int(texture(tessLevels, avgTexCoord).r*255.0);
-        const int MAX_TESS_LEVEL = 32;
 
         // Determine the size of the patch.
         vec2 size = abs(avgTexCoord - TexCoord[0])*2.0;
