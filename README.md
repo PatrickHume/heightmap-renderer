@@ -2,6 +2,8 @@
 
 ### Roughness-Based Heightmap Tessellation (OpenGL)
 
+<img src="https://github.com/PatrickHume/heightmap-renderer/blob/main/coverImage.png?raw=true" width="480">
+
 Reducing a heightmap mesh's poly-count by pre-calculating per-patch tessellation levels.
 
 Based on the excellent LearnOpenGL guest articles Dr. Jeffrey Paone. <br>
