@@ -12,15 +12,23 @@ Heightmap::Heightmap(const char *file)
     glGetIntegerv(GL_MAX_TESS_GEN_LEVEL, &maxTessLevel);
     std::cout << "Max available tessellation level: " << maxTessLevel << std::endl;
 
+    // ---------------------------------- Creating Shaders ----------------------------------
     // Create shader for tessellating and viewing the mesh.
     drawShader = std::make_shared<Shader>(
         "resources/shaders/passthrough.vs", 
         "resources/shaders/texture.fs", 
         nullptr,
         "resources/shaders/controlShader.tcs", 
-        "resources/shaders/evaluationShader.tes"); 
+        "resources/shaders/evaluationShader.tes");
+    // Create shader that will perform the tessellation level evaluation and write to the framebuffer.
+    evaluationShader = std::make_shared<Shader>(
+        "resources/shaders/passthrough.vs", 
+        "resources/shaders/heightComparison.fs", 
+        nullptr,
+        "resources/shaders/controlSetup.tcs", 
+        "resources/shaders/evaluationSetup.tes");  
 
-    // ---------------------------------- Loading Heightmap ----------------------------------
+    // ---------------------------------- Creating Heightmap Mesh ----------------------------------
     // Load the heightmap image into a texture.
     heightmapTexture = std::make_shared<Texture>(file, heightmapTexUnit);
     // Get the width and height of the image.
@@ -99,6 +107,7 @@ Heightmap::Heightmap(const char *file)
     // Unbind the framebuffer to prevent any accidental drawing to it.
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // ---------------------------------- Loading Tessellation Levels ----------------------------------
     // Create an empty texture to pass the tessellation levels to the shader.
     tessLevelsTexture = std::make_shared<Texture>(rez, rez, 1, tessLevelsTexUnit);
     // Load the tessellation levels per patch.
@@ -117,6 +126,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
     std::string fileNameNoExt   = fileName.substr(0,fileName.find_last_of('.'));
     std::string outputFile      = "resources/cachedData/"+fileNameNoExt+"TessLevels.png";
 
+    // ---------------------------------- Loading Cached Tess. Levels ----------------------------------
     // Attempt to load the file.
     std::cout << "Searching for file: " << outputFile << std::endl;
     int w, h, c;
@@ -137,14 +147,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
     // Otherwise, begin evaluating each tessellation level.
     std::cout << "Creating tessLevels image." << std::endl;
 
-    // Create shader that will perform the tessellation level evaluation and write to the framebuffer.
-    evaluationShader = std::make_shared<Shader>(
-        "resources/shaders/passthrough.vs", 
-        "resources/shaders/heightComparison.fs", 
-        nullptr,
-        "resources/shaders/controlSetup.tcs", 
-        "resources/shaders/evaluationSetup.tes"); 
-
+    // ---------------------------------- Creating Patch Buffers ----------------------------------
     // Create some buffers to store patch data.
     std::array<float, rez*rez>  tessLevelError;     // Stores the total pixel error of a patch.
     std::array<bool, rez*rez>   patchIsLocked;      // Records whether or not a patch has been locked.
@@ -157,6 +160,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
     tessLevelsBuffer.fill((unsigned char)1);
     patchIsLocked.fill(false);
 
+    // ---------------------------------- Setting Up Render ----------------------------------
     // Create an orthogonal projection to give the camera a flat view of the resulting mesh.
     // So it appears as if it is a 2D heightmap.
     glm::mat4 ortho = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -2.0f, 2.0f);
@@ -178,8 +182,11 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
     // Bind the vertex array of quads forming the mesh.
     glBindVertexArray(terrainVAO);
 
+    // ---------------------------------- Evaluating Tessellation Levels ----------------------------------
     // Begin the tessellation level evaluations.
     for(int currentTessLevel = 1; currentTessLevel <= 32; currentTessLevel++){
+
+        // ---------------------------------- Rendering Scene ----------------------------------
         std::cout << "Evaluating tessellation level " << currentTessLevel << std::endl;
         // Load the tess levels into the texture.
         tessLevelsTexture->loadData(&tessLevelsBuffer[0]);
@@ -195,6 +202,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
         // Draw the mesh.
         glDrawArrays(GL_PATCHES, 0, 4*rez*rez);
 
+        // ---------------------------------- Reading Results ----------------------------------
         // Wait until drawing has finished before reading from the frame buffer.
         glFinish();
         glReadPixels(0, 0, width, height, GL_RED, GL_FLOAT, &screenFloatBuffer[0]);
@@ -205,6 +213,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
         // (We cannot rely on the data being aligned as 4 bytes or otherwise.)
         glPixelStorei(GL_PACK_ALIGNMENT, 1);
         
+        // ---------------------------------- Updating Buffers ----------------------------------
         // Clear the error buffer - this is where the error of all pixels in each patch is accumulated.
         tessLevelError.fill(0.0);
         // For each pixel in the screen:
@@ -220,7 +229,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
             // Accumulate the pixel error into the patch error array.
             tessLevelError[pos] += screenFloatBuffer[i];    
         }
-
+        
         // Calculate the heightest possible error patch.
         int pixelsPerPatch = (int)(width/rez) * (int)(height/rez);
 
@@ -243,6 +252,8 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
             }
         }
     }
+
+    // ---------------------------------- Tidying Up Render ----------------------------------
     // Bind the frame buffer back to 0 for regular drawing to the screen.
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // Enable the depth testing we disabled earlier.
@@ -254,6 +265,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
     heightmapTexture->Unbind();
     tessLevelsTexture->Unbind();
 
+    // ---------------------------------- Caching and Returning ----------------------------------
     // Store the results to the cachedData folder.
     stbi_write_png(outputFile.c_str(), rez, rez, 1, &tessLevelsBuffer[0], rez);
 
@@ -261,7 +273,7 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
     std::cout << "TessLevels image complete." << std::endl;
     return tessLevelsBuffer;
 }
-// Draw the mesh.
+// Draws the mesh.
 void Heightmap::Draw(Camera& camera)
 {
     // Send the camera position to the shader.
