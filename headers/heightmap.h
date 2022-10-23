@@ -21,11 +21,16 @@ class Heightmap
         Heightmap(const char *filename);
         ~Heightmap();
         void Draw(Camera& camera);
+        void toggleSimpleShader();
     private:
         // The number of points per patch in the tessellation control shader.
         static constexpr unsigned int NUM_PATCH_PTS = 4;
+        // When true, used a shader with a fixed tessellation level in rendering.
+        bool viewingSimpleShader = false;
         // Shaders.
-        std::shared_ptr<Shader> drawShader;         // Used to view the heightmap.
+        std::shared_ptr<Shader> drawShader;         // This is a pointer to the shadre being used in the draw stage.
+        std::shared_ptr<Shader> finalShader;        // Used to view the heightmap.
+        std::shared_ptr<Shader> simpleShader;       // Used to view the heightmap with a fixed tessellation level.
         std::shared_ptr<Shader> evaluationShader;   // Used to determine minimum tessellation levels.
         // Textures.
         std::shared_ptr<Texture> heightmapTexture;  // Used to detail the heightmap.
@@ -48,10 +53,10 @@ class Heightmap
         static constexpr unsigned int rez = 20;
         // The miminum tessellation levels for each patch of the mesh.
         std::array<unsigned char, rez*rez> tessLevels;
-
+        // The heightmap image filename and directory.
         std::string fileName;
         std::string fileDirectory;
-
+        // The method used to load chached tessLevel images and generate new ones.
         std::array<unsigned char, rez*rez> loadTessLevelImage();
 };
 

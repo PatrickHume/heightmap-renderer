@@ -13,20 +13,28 @@ Heightmap::Heightmap(const char *file)
     std::cout << "Max available tessellation level: " << maxTessLevel << std::endl;
 
     // ---------------------------------- Creating Shaders ----------------------------------
-    // Create shader for tessellating and viewing the mesh.
-    drawShader = std::make_shared<Shader>(
+    // Create a shader for tessellating and viewing the mesh.
+    finalShader = std::make_shared<Shader>(
         "resources/shaders/passthrough.vs", 
         "resources/shaders/texture.fs", 
         nullptr,
         "resources/shaders/controlShader.tcs", 
         "resources/shaders/evaluationShader.tes");
-    // Create shader that will perform the tessellation level evaluation and write to the framebuffer.
+    // Create a shader for demonstrating the mesh with a fixed tessellation level.
+    simpleShader = std::make_shared<Shader>(
+        "resources/shaders/passthrough.vs", 
+        "resources/shaders/texture.fs", 
+        nullptr,
+        "resources/shaders/controlSimple.tcs", 
+        "resources/shaders/evaluationShader.tes");  
+    // Create a shader that will perform the tessellation level evaluation and write to the framebuffer.
     evaluationShader = std::make_shared<Shader>(
         "resources/shaders/passthrough.vs", 
         "resources/shaders/heightComparison.fs", 
         nullptr,
         "resources/shaders/controlSetup.tcs", 
-        "resources/shaders/evaluationSetup.tes");  
+        "resources/shaders/evaluationSetup.tes");
+    drawShader = finalShader;
 
     // ---------------------------------- Creating Heightmap Mesh ----------------------------------
     // Load the heightmap image into a texture.
@@ -302,4 +310,13 @@ void Heightmap::Draw(Camera& camera)
     // Unbind the textures once finished drawing.
     heightmapTexture->Unbind();
     tessLevelsTexture->Unbind();
+}
+// Toggle the draw shader between the finalShader and simpleShader for visual comparison.
+void Heightmap::toggleSimpleShader(){
+    viewingSimpleShader = !viewingSimpleShader;
+    if(viewingSimpleShader){
+        drawShader = simpleShader;
+    }else{
+        drawShader = finalShader;
+    }
 }

@@ -108,6 +108,10 @@ int main(int argc, char** argv)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             }
         }
+        // If 0 key is pressed: toggle the simple shader (uses a fixed tessellation level).
+        if (firstPress(window, GLFW_KEY_0) == GLFW_PRESS && camera.focus && !camera.locked){
+            heightmap.toggleSimpleShader();
+        }
 
         // Pass the user input to world.
         camera.Inputs(window);
