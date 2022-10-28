@@ -284,9 +284,6 @@ std::array<unsigned char, Heightmap::rez*Heightmap::rez> Heightmap::loadTessLeve
 // Draws the mesh.
 void Heightmap::Draw(Camera& camera)
 {
-    // Send the camera position to the shader.
-    camera.sendPosition(drawShader, "camPos");
-
     // Bind the draw texture.
     heightmapTexture->Bind();
     heightmapTexture->Assign(drawShader, "heightMap");
