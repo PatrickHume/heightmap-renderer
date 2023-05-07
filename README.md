@@ -10,6 +10,8 @@ Based on the excellent LearnOpenGL guest articles Dr. Jeffrey Paone. <br>
 https://learnopengl.com/Guest-Articles/2021/Tessellation/Height-map <br>
 https://learnopengl.com/Guest-Articles/2021/Tessellation/Tessellation
 
+Read about it [here.](https://patrickhume.vercel.app/heightmap-tessellation)
+
 #### Running the program
 Included is the tasks.json file used in development. <br>
 Ideally there would be a makefile instead, this is yet to be written.
